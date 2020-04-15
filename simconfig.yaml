@@ -1,0 +1,45 @@
+Ball:
+  - has properties of the ball itself (mass, radius, etc...)
+  - This also includes its spring coef and damping coef. These are _decisions_ on how to model the ball and not inherent
+  -  to the ball itself. That means that the ODE is a propoerty of the ball.
+  - Having a self.compute_ode(t, x) might not be weird at all.
+  - To compute the ode at its own current state. it would do self.compute_ode(sim.time, self.state).
+  - Maybe the ball can update its own state
+ODE:
+  - based on the properties of the ball
+
+
+
+
+
+
+
+# represents how we model the ball
+BouncingBall:
+  - mass: 1
+    radius: 1
+    spring_coef: 1000
+    solver_type: 'euler'
+    inital_state:
+
+#
+Solver:
+  doesn't have any configs, the config for the solver lies inside the Ball and StateEstimator.
+
+StateEstimator:
+  - solver_type: 'euler'
+    position_sigma: 1
+
+
+
+
+most complicated one is the implicit adaptive step solver:
+  - create the butcher tableau (= for all solvers)
+  - find an acceptable dt (= for adaptive step)
+  -   iterate to find an acceptable k (= for implicit)
+  -   with that k update the state in 2 orders (= for adaptive + 2 below)
+  -   check the difference of the order w.r.t. a tolerance
+  -   if not good, run an algorithm to update the timestep
+  - update the state (= for all, and the same for all, just x += np.dot(k, b.T)
+  - find an appropriate timestep for the next iteration. (= for adaptive step)
+
