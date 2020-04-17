@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 # TODO: fix these imports. Probably start by giving everything in these folders proper names.
 #  (gnc.solvers, gnc.state_estimators, gnc.environments.bouncing_ball, etc...)
 # TODO: add a simconfig.yaml file
+# TODO: make 2D.
 from ball import Ball
-from sim_helpers.solvers.solvers import DP54
+from sim_helpers.solvers import DP54
 from sim_helpers.sensor import GaussianSensor
 from sim_helpers.events import Events
 from sim_helpers.data_logger import DataLogger
@@ -22,7 +23,8 @@ MyBallSolver = DP54(MyBall.ode, safety_factor=0.8, min_dt=1e-5, max_dt=0.05, tol
 MyBall.set_up_solver(MyBallSolver)
 
 # Set up a sensor.
-MySensor = GaussianSensor(sigma=0.0, mu=0.0)
+# We only measure the position, the first element of the state.
+MySensor = GaussianSensor(sigma=0.0, mu=0.0, state_index_start=0, state_index_end=1)
 
 # Set up the sampling frequencies.
 sampling_frequencies = {'sensor': 2, 'state_estimator': 2}
@@ -68,8 +70,8 @@ while running:
 
 
 fig, ax = plt.subplots(1, 1, figsize=(15, 5))
-ax.plot(ball_logger.t, ball_logger.data[:, 0], label="Number of evaluations: {}".format(MyBall.num_evaluations))
-ax.plot(sensor_logger.t, sensor_logger.data[:, 0], '.', label="Measurement")
+ax.plot(ball_logger.t, ball_logger.data[:, 0], label=f"Number of evaluations: {MyBall.num_evaluations}")
+ax.plot(sensor_logger.t, sensor_logger.data, '.', label="Measurement")
 
 ax.legend()
 plt.show()
