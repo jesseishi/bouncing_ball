@@ -61,7 +61,7 @@ class Ball(object):
         # Then, drag. But only if we have a velocity
         if x[1] != 0:
             # The famous drag formula.
-            f_drag = 0.5 * 1.225 * x[1]*x[1] * self.S * self.C_d
+            f_drag = 0.5 * 1.225 * x[1] * x[1] * self.S * self.C_d
 
             # And turn it into the direction opposite to our velocity.
             f_drag *= -x[1] / np.abs(x[1])
@@ -94,7 +94,6 @@ class Ball(object):
         if self.solver is None:
             raise Exception("You first have to assign a solver using Ball.set_up_solver")
         self.t, self.x = self.solver.update_state_max_to_dt(self.t, self.x, dt)
-
 
 
 if __name__ == "__main__":

@@ -3,11 +3,11 @@ import matplotlib.pyplot as plt
 
 # TODO: fix these imports. Probably start by giving everything in these folders proper names.
 #  (gnc.solvers, gnc.state_estimators, gnc.environments.bouncing_ball, etc...)
-# TODO: once that's nice, set up a github repo.
+# TODO: add a simconfig.yaml file
 from ball import Ball
-from solvers.solvers import DP54
-from sensor import GaussianSensor
-from events import Events
+from sim_helpers.solvers.solvers import DP54
+from sim_helpers.sensor import GaussianSensor
+from sim_helpers.events import Events
 
 
 # Make the ball that we want to bounce.
