@@ -7,6 +7,7 @@
 # - add classmethod, .from_yaml() and set up any method with a yaml file.
 # - add exceptions and catch variables coming in that aren't good (when something is not a numpy array).
 # - add zero-crossing detection.
+# - break solvers up into smaller functions.
 
 
 import numpy as np
