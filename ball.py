@@ -2,6 +2,7 @@ import numpy as np
 
 
 # TODO: this should probably be the BouncingBall class.
+# TODO: inherit from 
 class Ball(object):
     def __init__(self, mass=1., radius=0.2, spring_constant=1000., damper_coef=2., drag_coef=0.0,
                  t0=None, x0=None, gravity=9.81):
@@ -37,6 +38,9 @@ class Ball(object):
 
     def set_up_solver(self, solver):
         self.solver = solver
+        # self.update_state = self.solver.update_state
+        # self.update_state_to_dt = self.solver.update_state_to_dt
+        # self.update_state_max_to_dt = self.solver.update_state_max_to_dt
 
     # This is the ODE that we give to the solver.
     def ode(self, t, x):
@@ -80,6 +84,9 @@ class Ball(object):
         return f_gravity + f_drag + f_bounce
 
     # This function updates the state of the ball, using the solver it has selected.
+    # #TODO: We could just inherit these functions somehow from solver.
+    # One way is to rename the solver class to 'continious_time_object' with an update_state
+    # function that this Ball object simply inherits.
     def update_state(self):
         if self.solver is None:
             raise Exception("You first have to assign a solver using Ball.set_up_solver")

@@ -8,9 +8,11 @@ import numpy as np
 # sensors have the same noise.
 # A simple sensor that adds noise to a true state according to a gaussian distribution.
 class GaussianSensor(object):
-    def __init__(self, sigma=1, mu=0):
-        # TODO: the input should be a little more real here. It should be encouraged to give it a vector of mu's and
-        #  sigma's the size of x.
+    def __init__(self, sigma=0, mu=0):
+        # TODO: the input should be a little more real here. It should actuall specify the mu and sigma for each thing we measure
+        # together with which part of the state we actually measure. (e.g. state is pos and vel, but the sensor only measures vel)
+        # In reality a sensor can be as complicated as the object that you simulate (the ball), heck, it can be one of the main 
+        # things that you want to simulate in the first place. This object isn't really reflecting that.
         self.sigma = sigma
         self.mu = mu
         self.x_star = None  # The measurement of the state. TODO: what's the proper name?
@@ -24,6 +26,6 @@ class GaussianSensor(object):
 
     def _calc_noise(self, x):
         # Make noise with a gaussian distribution.
-        mu_noise = self.mu * np.ones_like(x)
+        mu_bias = self.mu * np.ones_like(x)
         sigma_noise = self.sigma * np.random.randn(x.size).reshape(x.shape)
-        self.noise = mu_noise + sigma_noise
+        self.noise = mu_bias + sigma_noise
