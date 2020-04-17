@@ -75,9 +75,10 @@ class AdaptiveStep(RungeKutta):
         self.p = p
         self.safety_factor = safety_factor
 
-        # Set a maximum allowable minimum and maximum dt.
+        # Set a maximum allowable minimum and maximum dt together with the dt that we'll use the first step.
         self.min_dt = min_dt
         self.max_dt = max_dt
+        self.dt = max_dt  # We're feeling lucky.
 
         # Our tolerances for accepting a solution. Both absolute and relative difference.
         self.tol_abs_x = tol_abs_x
@@ -93,8 +94,6 @@ class AdaptiveStep(RungeKutta):
             self._calc_k(t, x)
 
             # Make a higher-order and lower-order update.
-            # Note that if this is the first update, we'll use the default dt of the RungeKutta class.
-            # (That's ok because we'll lower the timestep if needed, this is an adaptive-step method after all.)
             # TODO: We _could_ make this into a function in the RungeKutta class. _calc_new_state(x, 2_outputs=True)
             x_higher_order = x + self.dt * np.dot(self.k, self.b.T)
             x_lower_order = x + self.dt * np.dot(self.k, self.b_hat.T)

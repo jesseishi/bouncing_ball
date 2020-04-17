@@ -15,26 +15,23 @@ from sim_helpers.data_logger import DataLogger
 MyBall = Ball()
 
 # setup a solver for the ball.
-MyBallSolver = DP54(MyBall.ode, safety_factor=0.8, min_dt=1e-5, max_dt=0.1, tol_abs_x=0.0001, tol_rel_x=0.0001)
+MyBallSolver = DP54(MyBall.ode, safety_factor=0.8, min_dt=1e-5, max_dt=0.05, tol_abs_x=0.0001, tol_rel_x=0.0001)
 # And feed it back to the ball.
 # TODO: this seems a lil weird. Why not make ball an instance of 'propagatable object' that already has an update_state function.
 # Yeah then propagatable_object just has a self.ode = None that's overwritten by in the Ball object?.
 MyBall.set_up_solver(MyBallSolver)
 
 # Set up a sensor.
-MySensor = GaussianSensor(sigma=0.0, mu=0.05)
+MySensor = GaussianSensor(sigma=0.0, mu=0.0)
 
 # Set up the sampling frequencies.
-sampling_frequencies = {'sensor': 2, 'state_estimator': 2, 'gravity_onturner': 0.5}
+sampling_frequencies = {'sensor': 2, 'state_estimator': 2}
 MyEvents = Events(sampling_frequencies)
 
 # Set up the loggers.
 ball_logger = DataLogger(MyBall.t, MyBall.x)
 MySensor.simulate_measurement(MyBall.x)
 sensor_logger = DataLogger(MyBall.t, MySensor.x_star)
-
-# turn off gravity.
-MyBall.g = 0
 
 running = True
 while running:
@@ -66,9 +63,6 @@ while running:
         # Logger.log('a bunch of things')
         pass
 
-    if 'gravity_onturner' in events:
-        MyBall.g = 9.81
-
     if MyBall.t > 10:
         running = False
 
@@ -76,11 +70,6 @@ while running:
 fig, ax = plt.subplots(1, 1, figsize=(15, 5))
 ax.plot(ball_logger.t, ball_logger.data[:, 0], label="Number of evaluations: {}".format(MyBall.num_evaluations))
 ax.plot(sensor_logger.t, sensor_logger.data[:, 0], '.', label="Measurement")
-
-# ax_r = ax.twinx()
-# ax_r.plot(t_list[:-1], np.diff(t_list))
-# ax_r.plot(t_star_list[:-1], np.diff(t_star_list))
-
 
 ax.legend()
 plt.show()
