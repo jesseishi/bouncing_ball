@@ -33,6 +33,42 @@ class RungeKutta(object):
 
         return t_new, x_new
 
+    def update_state_to_t(self, t_old, x_old, t_new):
+        # Safe the original dt set up for this solver.
+        original_dt = self.dt
+
+        # TODO: t_old is an array for no good reason.
+        t_old = t_old[0]
+        t_new = t_new[0]
+
+        # Figure out how many steps we should take.
+        num_steps = (t_new - t_old) / self.dt
+        num_steps = np.ceil(num_steps).astype(int)
+
+        # Then calculate the dt that we need.
+        self.dt = (t_new - t_old) / num_steps
+
+        # Now take the right number of steps, updating the state and time in between.
+        for _ in range(num_steps):
+            t_old, x_old = self.update_state(t_old, x_old)
+
+        # Check that we did that correctly.
+        if t_old != t_new:
+            # Because of floating point errors, we might need to take an extra step.
+            self.dt = t_new - t_old
+            t_old, x_old = self.update_state(t_old, x_old)
+
+        # Now check that we did that correctly again.
+        if t_old != t_new:
+            raise Exception(f"Didn\'t update state to the right time. Target {t_new} but got to {t_old}")
+
+        # Reset the original dt.
+        self.dt = original_dt
+
+        # And return our updated time and state.
+        return np.asarray([t_old]), x_old
+
+
     def _calc_k(self, t, x):
         # Find the change in state for this timestep.
         self.k = np.zeros((len(x), len(self.c)))
@@ -183,6 +219,10 @@ class AdaptiveStep(RungeKutta):
 
         # And return.
         return t_new, x_new
+
+    # TODO:
+    def update_state_to_t(self, *args, **kwargs):
+        raise NotImplementedError("Haven't implemented the update_state_to_t function for adaptive-step solvers yet")
 
 
 class DP54(AdaptiveStep):

@@ -1,4 +1,5 @@
 # TODO: this is probably not the most efficient logger but it gets the job done.
+#  It'd be nice to have this use pandas and name the columns and stuff. (although that doesn't work as well for vectors)
 import numpy as np
 
 

@@ -30,7 +30,7 @@ class Ball(object):
     def _set_initial_values(t0, x0):
         # Set the initial values for time and state.
         if t0 is None:
-            t0 = np.array([0])
+            t0 = np.array([0])  # TODO: It's weird that this is an array.
         if x0 is None:
             x0 = np.array([1, 0])
 
@@ -99,6 +99,10 @@ class Ball(object):
             raise Exception("You first have to assign a solver using Ball.set_up_solver")
         self.t, self.x = self.solver.update_state_max_to_dt(self.t, self.x, dt)
 
+    def update_state_to_t(self, t_new):
+        if self.solver is None:
+            raise Exception("You first have to assign a solver using Ball.set_up_solver")
+        self.t, self.x = self.solver.update_state_to_t(self.t, self.x, t_new)
 
 if __name__ == "__main__":
     my_ball = Ball()
