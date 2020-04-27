@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# TODO: fix these imports. Probably start by giving everything in these folders proper names.
-#  (gnc.solvers, gnc.state_estimators, gnc.environments.bouncing_ball, etc...)
 # TODO: add a simconfig.yaml file
 # TODO: make 2D.
 from ball import Ball
