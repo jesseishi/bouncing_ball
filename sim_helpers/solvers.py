@@ -188,7 +188,7 @@ class AdaptiveStep(RungeKutta):
     def update_state_to_dt(self, t, x, dt):
         # We'll keep updating until the newest update has overshot our target.
         # In that case we can set the dt and run once more from the last update.
-        t_new, x_new = t, x
+        t_new, x_new = t, x  # TODO: make uniform terminology around this, this is confusing.
         while t_new < t+dt:
             t_last, x_last = t_new, x_new
             t_new, x_new = self.update_state(t_last, x_last)
@@ -220,9 +220,20 @@ class AdaptiveStep(RungeKutta):
         # And return.
         return t_new, x_new
 
-    # TODO:
-    def update_state_to_t(self, *args, **kwargs):
-        raise NotImplementedError("Haven't implemented the update_state_to_t function for adaptive-step solvers yet")
+    # TODO: get rid of the other two functions to clean it up.
+    def update_state_to_t(self, t_old, x_old, t_target):
+        t = t_old
+        x = x_old
+        while t < t_target:
+            t_last = t
+            x_last = x
+            t, x = self.update_state(t, x)
+
+        dt = t_target - t_last
+        t_final, x_final = self.update_state_to_dt(t_last, x_last, dt)  # This isn't great.
+        # TODO: rewrite this function the right way. I think that there's a bug somewhere which prevented me from doing it the first time.
+
+        return t_final, x_final
 
 
 class DP54(AdaptiveStep):
