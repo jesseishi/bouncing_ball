@@ -5,13 +5,9 @@ export nothing
 using Random
 
 
-# State of the sensor could be used to keep track of a moving bias.
-struct State
-end
-
 # Sensor parameters.
 struct Params
-    μ::Vector{Float64}
+    bias::Vector{Float64}
     σ::Vector{Float64}
 end
 params() = Params([0, 0], [0, 0])
@@ -19,8 +15,8 @@ params() = Params([0, 0], [0, 0])
 
 # Measure the position.
 function measure(pos::Vector, params::Params)
-    noise = params.μ + params.σ .* randn(size(pos))
-    return pos + noise
+    noise = params.σ .* randn(size(pos))  # TODO: make a AR(1) walk (using sensor state).
+    return pos + params.bias + noise
 end
 
 

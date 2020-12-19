@@ -1,5 +1,4 @@
 # TODO:
-# 5. Continuous time updates should be a lot smaller than the discrete time updates.
 # 6. Start with how Kalman filters work.
 
 # Usings.
@@ -26,8 +25,11 @@ function main()
 
     # And the sensor.
     sensor_params = Sensor.params()
+    pos_star = Sensor.measure(ball_state_k.pos, sensor_params)
 
     # Set the time span of the sim and timestep.
+    # TODO: Think about how to do time. Now we have a continuous update and then
+    #  all discrete updates simultanuously and instantly (ok assumption for now).
     t0 = 0
     t1 = 5
     Δt = 0.2      # Time between discrete updates.
@@ -38,7 +40,6 @@ function main()
     push!(ball_data, [t0 ball_state_k.pos[1] ball_state_k.pos[2]])
 
     sensor_data = DataFrame(t = Float64[], x = Float64[], y = Float64[])
-    pos_star = Sensor.measure(ball_state_k.pos, sensor_params)
     push!(sensor_data, [t0 pos_star[1] pos_star[2]])
 
     # During one iteration of this for loop we move the simulation from t_km1 to t_k.

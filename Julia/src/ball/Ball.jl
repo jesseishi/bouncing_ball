@@ -6,7 +6,7 @@ import Base: +, *
 using LinearAlgebra
 
 
-# Global constants.
+# Global constants (TODO: Move to WorldParams?).
 g0 = [0, -9.81]  # Gravitational acceleration in x, y coordinates [m/s2].
 ρ = 1.225        # Air density [kg/m3].
 
@@ -74,6 +74,8 @@ function step(state::State, params::Params, Δt)
 
     return state + Δt * state_dot
 end
+
+# TODO: Would be pretty cool to add a variable step solver.
 
 
 end  # Module Ball.
