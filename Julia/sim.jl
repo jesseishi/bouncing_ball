@@ -29,8 +29,9 @@ function main()
 
     # Set the time span of the sim and timestep.
     t0 = 0
-    t1 = 1
-    Δt = 0.1
+    t1 = 5
+    Δt = 0.2      # Time between discrete updates.
+    dt = Δt / 10  # Time used by the RK4 method to do the continuous time update.
 
     # Set up data gathering.
     ball_data = DataFrame(t = Float64[], x = Float64[], y = Float64[])
@@ -55,7 +56,6 @@ function main()
 
         # The only continuous time object is the ball. But we want more datapoints
         # for each continuous time update, so we'll divide Δt up to dt.
-        dt = Δt / 10
         ball_state_t = ball_state_km1
         for t in t_km1+dt : dt : t_km1+Δt
             ball_state_t = Ball.step(ball_state_t, ball_params, dt)
@@ -69,15 +69,15 @@ function main()
 
         # The sensor.
         pos_star = Sensor.measure(ball_state_k.pos, sensor_params)
-        push!(sensor_data, [t0 pos_star[1] pos_star[2]])
+        push!(sensor_data, [t_k pos_star[1] pos_star[2]])
 
     end
 
 
     # Saving the data.
     # Not sure why we should also specify the Julia folder here since this file is inside the Julia folder...
-    CSV.write("Julia/results/ball_data", ball_data)
-    CSV.write("Julia/results/sensor_data", sensor_data)
+    CSV.write("Julia/results/data/ball_data", ball_data)
+    CSV.write("Julia/results/data/sensor_data", sensor_data)
 end
 
 @time main()
