@@ -1,5 +1,4 @@
 # TODO:
-# 4. Implement RK4 (and RK4_2 if that could be a thing).
 # 5. More structure: World -> Ball, Sensor, Filter
 # 6. Start with how Kalman filters work.
 
@@ -9,11 +8,7 @@ using CSV
 
 # Includes and their usings.
 include("src/ball/Ball.jl")
-include("src/solvers/Euler.jl")
-include("src/solvers/Euler2.jl")
 using .Ball
-using .Euler
-using .Euler2
 
 
 # The main simulation loop.
@@ -38,12 +33,26 @@ function main()
         # What used to be the present (k) is now the past (k-1).
         ball_state_km1 = ball_state_k
 
-        # Start by updating the ball from t_km1 to t_k.
-        ball_state_dot_km1 = Ball.state_dot(ball_state_km1, ball_params)
-        ball_state_k = Euler2.step(ball_state_km1, ball_state_dot_km1, Δt)
 
-        # Store results at the t_k (now) time, so index i_km1 + 1.
+        ###########################
+        # Continuous time updates #
+        ###########################
+
+        # The only continuous time object is the ball.
+        ball_state_k = Ball.step(ball_state_km1, ball_params, Δt)
+
+        #########################
+        # Discrete time updates #
+        #########################
+
+        # The sensor, particle filter, etc... will come here.
+
+        ################
+        # Data storage #
+        ################
+
         push!(ball_data, [t_k ball_state_k.pos[1] ball_state_k.pos[2]])
+
     end
 
 

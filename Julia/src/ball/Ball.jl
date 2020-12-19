@@ -34,7 +34,7 @@ params() = Params(1, 1, 0, 1000, 2)
 
 
 # Get the derivative of the state at a certain state and time.
-function state_dot(state::State, params::Params)
+function ode(state::State, params::Params)
 
     # Calculate the force on the ball.
     f = g0 * params.m
@@ -56,11 +56,24 @@ function state_dot(state::State, params::Params)
 
     end
 
-    # Finally get the acceleration and construct state_dot.
+    # Finally get the acceleration and construct ode.
     acc = f / params.m
 
     return State(state.vel, acc)
 end
 
 
-end  # Module.
+# RK4 implementation to make a timestep.
+function step(state::State, params::Params, Δt)
+    k1 = ode(state,              params)
+    k2 = ode(state + 0.5Δt * k1, params)
+    k3 = ode(state + 0.5Δt * k2, params)
+    k4 = ode(state +    Δt * k3, params)
+
+    state_dot = 1/6 * (k1 + 2k2 + 2k3 + k4)
+
+    return state + Δt * state_dot
+end
+
+
+end  # Module Ball.

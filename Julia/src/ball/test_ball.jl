@@ -4,6 +4,5 @@ using .Ball
 state = Ball.state()
 params = Ball.params()
 
-state_dot = Ball.state_dot(state, params)
-
-state + 0.1state_dot
+Ball.ode(state, params)
+Ball.step(state, params, 0.1)
