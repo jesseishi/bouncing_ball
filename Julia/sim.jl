@@ -36,14 +36,14 @@ function main()
     # And the particle filter.
     filter_params = ParticleFilter.params()
     filter_state = ParticleFilter.init(pos_star, filter_params)
-    pos_hat = ParticleFilter.measure(filter_state)
+    pos_hat = filter_state.pos_hat
 
     # Set the time span of the sim and timestep.
     # TODO: Think about how to do time. Now we have a continuous update and then
     #  all discrete updates simultanuously and instantly (ok assumption for now).
     t0 = 0
     t1 = 5
-    Δt = 0.2      # Time between discrete updates.
+    Δt = 0.25     # Time between discrete updates.
     dt = Δt / 10  # Time used by the RK4 method to do the continuous time update.
     N_discrete_steps = floor(Int, (t1-t0) / Δt)
     n_continuous_steps = floor(Int, (t1-t0) / dt)
@@ -94,7 +94,8 @@ function main()
         sensor_data2[i_k, :] = pos_star
 
         # The particle filter.
-        pos_hat = pos_star + [0.1, 0.1]
+        filter_state = ParticleFilter.step(filter_state, filter_params, pos_star, Δt)
+        pos_hat = filter_state.pos_hat
         filter_data2[i_k, :] = pos_hat
         particles_data[i_k, :, :] = ParticleFilter.get_particles_data(filter_state, filter_params)
 

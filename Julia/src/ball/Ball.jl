@@ -75,6 +75,20 @@ function step(state::State, params::Params, Δt)
     return state + Δt * state_dot
 end
 
+# Step but with a certain max dt.
+function step(state::State, params::Params, Δt, max_dt)
+    N_steps = ceil(Int, Δt / max_dt)
+
+    dt = Δt / N_steps
+
+    new_state = state
+    for _ in 1:N_steps
+        new_state = step(new_state, params, dt)
+    end
+
+    return new_state
+end
+
 # TODO: Would be pretty cool to add a variable step solver.
 
 

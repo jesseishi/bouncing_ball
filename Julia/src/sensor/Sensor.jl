@@ -10,7 +10,7 @@ struct Params
     bias::Vector{Float64}
     σ::Vector{Float64}
 end
-params() = Params([0, 0], [0, 0])
+params() = Params([0, 0], [0.1, 0.1])
 
 
 # Measure the position.
