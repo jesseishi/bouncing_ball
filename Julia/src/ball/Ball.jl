@@ -16,7 +16,7 @@ struct State
     pos::Vector{Float64}
     vel::Vector{Float64}
 end
-state() = State([0, 5], [1, 0])
+state() = State([0, 5], [0.8, 0])
 
 struct Params
     m::Float64   # Mass [kg]
@@ -25,7 +25,7 @@ struct Params
     k::Float64   # Spring constant [N/m]
     c::Float64   # Damper constant [N/(m/s)]
 end
-params() = Params(1, 1, 0, 1000, 2)
+params() = Params(1, 1, 0, 500, 3)
 
 
 # Add a addition and multiplication function for the ballstate.
@@ -40,7 +40,7 @@ function ode(state::State, params::Params)
     f = g0 * params.m
 
     # If the ball is in the air and moving we have a drag force.
-    if state.pos[2] > params.r && !iszero(norm(state.vel))
+    if state.pos[2] > params.r / 2 && !iszero(norm(state.vel))
         q = 0.5ρ * norm(state.vel)^2
         A = π * params.r^2
         fd = params.cd * q * A
@@ -50,7 +50,7 @@ function ode(state::State, params::Params)
 
     # And when touching the ground we add a spring and damper force.
     # For now this only acts in the vertical direction.
-    elseif state.pos[2] < params.r
+    elseif state.pos[2] < params.r / 2
         f[2] += params.k * (params.r - state.pos[2])
         f[2] += -params.c * state.vel[2]
 
