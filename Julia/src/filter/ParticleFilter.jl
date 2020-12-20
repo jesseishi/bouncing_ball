@@ -26,14 +26,13 @@ struct Params
     σ_pos::Vector{Float64}  # Standard deviation for position perturbation [m].
     σ_vel::Vector{Float64}  # Standard deviation for velocity perturbation [m].
 end
-params() = Params(100, [0.01, 0.01], [0.01, 0.01])
+params() = Params(1000, [0.2, 0.2], [0.1, 0.1])
 
 # Initialize with N particles that are slightly perturbed and have normalized weights.
 function init(pos_star, params::Params)
 
     # TODO: regularization on state _and_ params maybe.
-    particles_state = [regularize(Ball.State(pos_star, [0, 0]), params) for _ = 1:params.N]
-    particles_state = [regularize(Ball.state(), params) for _ = 1:params.N]
+    particles_state = [regularize(Ball.State(pos_star, [0.8, 0]), params) for _ = 1:params.N]
     particles_params = [regularize(Ball.params(), params) for _ = 1:params.N]
 
     weights = ones(params.N) / params.N
@@ -90,8 +89,8 @@ function calculate_weights(particles_state::Vector{Ball.State}, pos_star)
     distances = [norm(particle.pos - pos_star) for particle in particles_state]
 
     # The higher the distance the lower the weight should be.
-    # weights = exp.(-distances)
-    weights = maximum(distances) .- distances
+    weights = exp.(-distances)
+    # weights = maximum(distances) .- distances
 
     # Normalize the weights so they sum to 1.
     return normalize!(weights, 1)
@@ -105,8 +104,11 @@ end
 
 # Perturb a particle slightly with some change in pos and vel.
 function regularize(state::Ball.State, params::Params)
+
     Δpos = params.σ_pos .* randn(2)
-    Δvel = params.σ_vel .* randn(2)
+
+    # The velocity perturbation is proportional to the velocity.
+    Δvel = state.vel .* params.σ_vel .* randn(2)
 
     return state + Ball.State(Δpos, Δvel)
 end

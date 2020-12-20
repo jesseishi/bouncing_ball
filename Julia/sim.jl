@@ -97,6 +97,9 @@ function main()
         filter_state = ParticleFilter.step(filter_state, filter_params, pos_star, Δt)
         pos_hat = filter_state.pos_hat
         filter_data2[i_k, :] = pos_hat
+
+        # Note that this particle data isn't from when the measurement was taken,
+        #  but from after the perturbation.
         particles_data[i_k, :, :] = ParticleFilter.get_particles_data(filter_state, filter_params)
 
 

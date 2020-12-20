@@ -15,7 +15,7 @@ end
 
 
 # Plot it.
-plot(pos[:, 1], pos[:, 2], label="true", ylims=[0, maximum(pos[:, 2])])
+plot(pos[:, 1], pos[:, 2], label="true", xlims=[0, maximum(pos[:, 1])], ylims=[0, maximum(pos[:, 2])])
 scatter!(pos_star[:, 1], pos_star[:, 2], label="measurement")
-scatter!(particles[:, 1, :], particles[:, 2, :], alpha=particles[:, 3, :], color="black", label="")
+scatter!(particles[:, 1, :], particles[:, 2, :], alpha=100 .* particles[:, 3, :], color="black", label="")
 scatter!(pos_hat[:, 1], pos_hat[:, 2], label="estimate")
