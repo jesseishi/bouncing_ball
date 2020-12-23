@@ -25,7 +25,7 @@ struct Params
     k::Float64   # Spring constant [N/m]
     c::Float64   # Damper constant [N/(m/s)]
 end
-params() = Params(1, 1, 0.01, 1000, 2)
+params() = Params(1, 1, 0.0, 1000, 0)
 
 
 # Add a addition and multiplication function for the ballstate.

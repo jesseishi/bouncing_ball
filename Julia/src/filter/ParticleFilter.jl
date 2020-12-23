@@ -23,8 +23,8 @@ end
 
 struct Params
     N::Int64                # Number of particles [-].
-    σ_pos::Vector{Float64}  # Standard deviation for position perturbation [m].
-    σ_vel::Vector{Float64}  # Standard deviation for velocity perturbation [m].
+    σ_pos::Vector{Float64}  # Initial standard deviation for position perturbation [m].
+    σ_vel::Vector{Float64}  # Initial standard deviation for velocity perturbation [m].
     λ::Float64              # Tuning parameter for regularization.
 end
 params() = Params(250, [0.2, 0.2], [0.2, 0.2], 0.1)
@@ -38,43 +38,42 @@ function init(pos_star, params::Params)
 
     weights = ones(params.N) / params.N
 
-    pos_hat = measure(particles_state, weights)
+    # Make an intermediate state of the filter to get a position estimate.
+    state = State([0, 0], particles_state, particles_params, weights)
+    state = estimate_pos_hat(state)
 
-    return State(pos_hat, particles_state, particles_params, weights)
+    # Return the initial state of the filter.
+    return state
 end
 
-# Step the whole particle filter and return the measurement.
+# Step the whole particle filter and return the new state of the filter.
 function step(state::State, params::Params, pos_star, Δt)
 
-    # TODO: The structure here is kind of ugly. Things we can do:
-    # Make the state mutable.
-    # Have each function here return an entire state.
+    # Each subfunction returns an entire new state of the particle filter. This
+    #  is very handy when testing different parts and gives it a nice structure.
+    # It might be nicer to make it a mutable state.
 
     # Propagate each particle.
-    particles_state  = propagate(state, params, Δt)
+    state  = propagate(state, Δt)
 
     # Recalculate the weights.
-    weights = calculate_weights(particles_state, pos_star)
+    state = calculate_weights(state, pos_star)
 
-    # Make a measurement and save these particles and weights for plotting.
-    pos_hat = measure(particles_state, weights)
-    particles_plot = particles_state
-    weights_plot = weights
+    # Make an estimate and this state for plotting.
+    state = estimate_pos_hat(state)
+    state_before_resample = state
 
     # Resample particles and reset the weights.
-    particles_state = resample(particles_state, weights, params)
-    weights = ones(params.N) / params.N
+    state = resample(state, params)
 
     # Regularize particles by giving them a random perturbation.
-    particles_state = regularize(particles_state, params, pos_star)
-    # particles_state = [perturb(particle_state, params) for particle_state in particles_state]
-    # particles_params = [perturb(particle_params, params) for particle_params in state.particles_params]
+    state = regularize(state, params, pos_star)
 
-    return get_particles_data(particles_plot, weights_plot, params), State(pos_hat, particles_state, state.particles_params, weights)
+    return state, state_before_resample
 end
 
 # Propagate each particle.
-function propagate(state::State, params, Δt)
+function propagate(state::State, Δt)
 
     particles_state = state.particles_state
     for (i, (particle_state, particle_params)) in enumerate(zip(state.particles_state, state.particles_params))
@@ -84,36 +83,46 @@ function propagate(state::State, params, Δt)
 
     end
 
-    return particles_state
+    # Return the new state of the filter.
+    return State(state.pos_hat, particles_state, state.particles_params, state.weights)
 end
 
 # Recalculate the weights based on a new measurement.
-function calculate_weights(particles_state::Vector{Ball.State}, pos_star)
+function calculate_weights(state::State, pos_star)
 
     # Calculate the distance between each particle and the measurement.
-    distances = [norm(particle.pos - pos_star) for particle in particles_state]
+    distances = [norm(particle.pos - pos_star) for particle in state.particles_state]
 
     # The higher the distance the lower the weight should be.
     weights = exp.(-distances)
     # weights = maximum(distances) .- distances
 
     # Normalize the weights so they sum to 1.
-    return normalize(weights, 1)
+    normalize!(weights, 1)
+
+    # Return the updated state of the particle filter.
+    return State(state.pos_hat, state.particles_state, state.particles_params, weights)
 end
 
-function resample(particles_state::Vector{Ball.State}, weights, params)::Vector{Ball.State}
+function resample(state::State, params::Params)
 
     # Pick random particles according to their weight. A particle can be picked multiple times.
-    sample(particles_state, Weights(weights), params.N, replace=true)
+    particles_state = sample(state.particles_state, Weights(state.weights), params.N, replace=true)
+
+    # Reset the weights.
+    weights = ones(params.N) / params.N
+
+    # Return the new state of the filter.
+    return State(state.pos_hat, particles_state, state.particles_params, state.weights)
 end
 
 # Regularizing.
-function regularize(particles::Vector{Ball.State}, params::Params, pos_star)
+function regularize(state::State, params::Params, pos_star)
 
     # Calculate the sample covariance, this is a 2x2 matrix relating the covariance
     # of the x positions and y positions.
     # E.g. this makes the spread around x higher than around y if there's generally more error in x.
-    Pk = 1/(params.N - 1) * sum([(particle.pos - pos_star) * (particle.pos - pos_star)'  for particle in particles])
+    Pk = 1/(params.N - 1) * sum([(particle.pos - pos_star) * (particle.pos - pos_star)'  for particle in state.particles_state])
 
     # To make gaussian random draws from this we take random draws with unit covariance
     # and multiply them with the cholesky factor of Pk, for this we take the lower triangular matrix C.
@@ -126,12 +135,16 @@ function regularize(particles::Vector{Ball.State}, params::Params, pos_star)
     C = cholesky(Pk)
     random_perturbations = C.U' * randn(2, params.N)
 
-    # We now multiply these perturbations by a tuning parameter λ.
+    # We now multiply these perturbations by a small tuning parameter λ.
+    # Not sure why or how to choose this parameter.
     random_perturbations *= params.λ
 
-    # Add the random perturbations and return.
-    return [particle + Ball.State(perturbation, [0, 0]) for (particle, perturbation)
-            in zip(particles, eachcol(random_perturbations))]
+    # Add the random perturbations.
+    particles_state = [particle + Ball.State(perturbation, [0, 0]) for (particle, perturbation)
+                       in zip(state.particles_state, eachcol(random_perturbations))]
+
+    # Return the updated state of the filter.
+    return State(state.pos_hat, particles_state, state.particles_params, state.weights)
 end
 
 # Perturb a particle slightly with some change in pos and vel.
@@ -150,23 +163,26 @@ function perturb(p_params::Ball.Params, params::Params)
     return p_params
 end
 
-# A simple weighted average will provide the measurement.
-function measure(particles::Vector{Ball.State}, weights)
+# A simple weighted average will provide the estimate.
+function estimate_pos_hat(state::State)
 
     # Not the most beautiful line. The [1] is needed to reduce an array of arrays to a vector.
     # We take the sum and not the mean because the weights add up to 1.
-    sum([particle.pos * w for (particle, w) in zip(particles, weights)], dims=1)[1]
+    pos_hat = sum([particle.pos * w for (particle, w) in zip(state.particles_state, state.weights)], dims=1)[1]
+
+    # Return the updated filter state.
+    return State(pos_hat, state.particles_state, state.particles_params, state.weights)
 end
 
 # A function to help with logging the data.
-function get_particles_data(particles::Vector{Ball.State}, weights, params::Params)
+function get_particles_data(state::State, params::Params)
 
     # We make an array with rows for x-positions, y-positions, and weights of each particle.
     particles_data = Array{Float64, 2}(undef, 3, params.N)
 
-    particles_data[1, :] = [particle.pos[1] for particle in particles]
-    particles_data[2, :] = [particle.pos[2] for particle in particles]
-    particles_data[3, :] = weights
+    particles_data[1, :] = [particle.pos[1] for particle in state.particles_state]
+    particles_data[2, :] = [particle.pos[2] for particle in state.particles_state]
+    particles_data[3, :] = state.weights
 
     return particles_data
 end
