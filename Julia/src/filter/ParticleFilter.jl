@@ -27,7 +27,7 @@ struct Params
     σ_vel::Vector{Float64}  # Initial standard deviation for velocity perturbation [m].
     λ::Float64              # Tuning parameter for regularization.
 end
-params() = Params(250, [0.2, 0.2], [0.2, 0.2], 0.1)
+params() = Params(100, [0.2, 0.2], [0.2, 0.2], 0.1)
 
 # Initialize with N particles that are slightly perturbed and have normalized weights.
 function init(pos_star, params::Params)
@@ -94,8 +94,9 @@ function calculate_weights(state::State, pos_star)
     distances = [norm(particle.pos - pos_star) for particle in state.particles_state]
 
     # The higher the distance the lower the weight should be.
-    weights = exp.(-distances)
-    # weights = maximum(distances) .- distances
+    # extra_distances = distances .- maximum(distances)
+    # weights = exp.(-extra_distances)
+    weights = maximum(distances) .- distances
 
     # Normalize the weights so they sum to 1.
     normalize!(weights, 1)

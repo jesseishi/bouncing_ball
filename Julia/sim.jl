@@ -1,8 +1,6 @@
 # TODO:
 # Hierarchy (WorldState).
 # Animate, test for particlefilter.
-# Make the sim run in dt and call filters when t%Δt == 0 (or something like that).
-# Make sure the sim can run for more than 5 secs without doing weird stuff.
 # Start with how Kalman filters work.
 # The sensor and filter don't have to run on the same Δt.
 
