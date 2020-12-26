@@ -27,7 +27,7 @@ struct Params
     σ_vel::Vector{Float64}  # Initial standard deviation for velocity perturbation [m].
     λ::Float64              # Tuning parameter for regularization.
 end
-params() = Params(100, [0.2, 0.2], [0.2, 0.2], 0.1)
+params() = Params(500, [0.2, 0.2], [0.2, 0.2], 0.1)
 
 # Initialize with N particles that are slightly perturbed and have normalized weights.
 function init(pos_star, params::Params)

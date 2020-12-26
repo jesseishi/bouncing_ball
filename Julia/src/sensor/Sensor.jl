@@ -10,7 +10,7 @@ struct Params
     bias::Vector{Float64}
     σ::Vector{Float64}
 end
-params() = Params([0, 0], [0.2, 0.2])
+params() = Params([0, 0], [0.4, 0.4])
 
 
 # Measure the position.
@@ -20,4 +20,4 @@ function measure(pos::Vector, params::Params)
 end
 
 
-end  # Module PosSensor
+end  # Module Sensor

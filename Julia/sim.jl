@@ -1,13 +1,11 @@
 # TODO:
-# Hierarchy (WorldState).
-# Animate, test for particlefilter.
-# Start with how Kalman filters work.
+# Sigma point filters (use probabilistic robotis _and_ Tucker's article).
+# Hierarchy -> make states mutable (actually I don't think this is strictly needed) (and adjust functions accordingly), init functions for everything, make a World module.
 # The sensor and filter don't have to run on the same Δt.
 
 # Usings.
-using CSV
-using Random
 using HDF5Logger
+using Random
 Random.seed!(1)
 
 # Includes and their usings.
@@ -26,28 +24,22 @@ function simulate()
     # Initialization #
     ##################
 
-    # TODO: Use init functions for everything. And add hierarchy so that
-    # state_k.ball = ... where state_k is ::WorldState.
-
     # Initialize the ball.
-    ball_state_k = Ball.state()
     ball_params = Ball.params()
+    ball_state_k = Ball.state()
 
     # And the sensor.
     sensor_params = Sensor.params()
     pos_star = Sensor.measure(ball_state_k.pos, sensor_params)
 
     # And the particle filter.
-    filter_params = ParticleFilter.params()
-    filter_state = ParticleFilter.init(pos_star, filter_params)
-    pos_hat = filter_state.pos_hat
+    particle_filter_params = ParticleFilter.params()
+    particle_filter_state = ParticleFilter.init(pos_star, particle_filter_params)
 
     # Set the time span of the sim and timestep.
-    # TODO: Think about how to do time. Now we have a continuous update and then
-    #  all discrete updates simultanuously and instantly (ok assumption for now).
     t0 = 0.
-    t1 = 10.
-    Δt = 0.2      # Time between discrete updates.
+    t1 = 20.
+    Δt = 0.25     # Time between discrete updates.
     dt = 0.01     # Time used by the RK4 method to do the continuous time update.
     N_discrete_steps = round(Int, (t1-t0) / Δt)
     N_continuous_steps = round(Int, (t1-t0) / dt)
@@ -57,8 +49,8 @@ function simulate()
     add!(log, "/continuous/ball_pos", ball_state_k.pos, N_continuous_steps+1, true)
     add!(log, "/continuous/t", t0, N_continuous_steps+1, true)
     add!(log, "/discrete/pos_star", pos_star, N_discrete_steps+1, true)
-    add!(log, "/discrete/pos_hat", pos_hat, N_discrete_steps+1, true)
-    add!(log, "/discrete/particles", ParticleFilter.get_particles_data(filter_state, filter_params), N_discrete_steps+1, true)
+    add!(log, "/discrete/pos_hat", particle_filter_state.pos_hat, N_discrete_steps+1, true)
+    add!(log, "/discrete/particles", ParticleFilter.get_particles_data(particle_filter_state, particle_filter_params), N_discrete_steps+1, true)
     add!(log, "/discrete/t", t0, N_discrete_steps+1, true)
 
     # Put the whole simulation in a try - except - finally block so we can always shutdown the simulation gracefully.
@@ -104,9 +96,9 @@ function simulate()
             log!(log, "/discrete/pos_star", pos_star)
 
             # The particle filter.
-            filter_state, filter_state_before_resample = ParticleFilter.step(filter_state, filter_params, pos_star, Δt)
-            log!(log, "/discrete/pos_hat", filter_state.pos_hat)
-            log!(log, "/discrete/particles", ParticleFilter.get_particles_data(filter_state_before_resample, filter_params))
+            particle_filter_state, particle_filter_state_before_resample = ParticleFilter.step(particle_filter_state, particle_filter_params, pos_star, Δt)
+            log!(log, "/discrete/pos_hat", particle_filter_state.pos_hat)
+            log!(log, "/discrete/particles", ParticleFilter.get_particles_data(particle_filter_state_before_resample, particle_filter_params))
 
         end
 
